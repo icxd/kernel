@@ -1,0 +1,16 @@
+.ccls-cache/
+.idea/
+cmake-build-debug/
+
+toolchain/bin/
+toolchain/binutils/
+toolchain/binutils-build/
+toolchain/gcc/
+toolchain/gcc-build/
+toolchain/i386-elf/
+toolchain/include/
+toolchain/lib/
+toolchain/libexec/
+toolchain/share/
+
+bin/
