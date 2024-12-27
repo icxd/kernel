@@ -4,13 +4,14 @@
 
 #pragma once
 
+#include "Defines.hpp"
 #include "Types.hpp"
 
 namespace Core {
 
-template <typename T, usz Size>
-struct Array final {
-public:
+template<typename T, usz Size>
+class Array final {
+  public:
   Array() = default;
   ~Array() = default;
 
@@ -41,14 +42,14 @@ public:
   [[nodiscard]] bool is_empty() const { return m_size == 0; }
   [[nodiscard]] usz size() const { return m_size; }
 
-  T &operator[](usz index) { return get(index); }
-  const T &operator[](usz index) const { return get(index); }
+  T &operator[](const usz index) { return get(index); }
+  const T &operator[](const usz index) const { return get(index); }
 
-private:
+  private:
   T m_items[Size] = {0};
-  usz m_size { 0 };
+  usz m_size{0};
 };
 
-} // namespace Core
+}// namespace Core
 
 using Core::Array;

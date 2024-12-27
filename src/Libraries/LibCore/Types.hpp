@@ -28,4 +28,16 @@ template <typename First, typename Second> void swap(First &first, Second &secon
   second = move(first_copy);
 }
 
+template <typename F>
+struct ScopeExit {
+  ScopeExit(F f_) : f(f_) { }
+  ~ScopeExit() { f(); }
+  F f;
+};
+
+struct DeferHelper {
+  template <typename F>
+  ScopeExit<F> operator+(F f) { return f; }
+};
+
 } // namespace Core

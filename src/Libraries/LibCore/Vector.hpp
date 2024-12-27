@@ -18,7 +18,7 @@ public:
   void push(T item) {
     if (!m_items && m_capacity == 0) {
       m_capacity = 16;
-      m_items = (T *)kmalloc(m_capacity * sizeof(T));
+      m_items = static_cast<T *>(kmalloc(m_capacity * sizeof(T)));
     }
 
     if (m_size + 1 > m_capacity) {
@@ -26,7 +26,7 @@ public:
       if (new_capacity < m_size + 1)
         new_capacity = m_size + 1;
 
-      T *new_items = (T *)kmalloc(new_capacity * sizeof(T));
+      T *new_items = static_cast<T *>(kmalloc(new_capacity * sizeof(T)));
       memcpy(new_items, m_items, m_size);
       delete[] m_items;
       m_items = new_items;
@@ -46,9 +46,9 @@ public:
     return m_items[index];
   }
 
-  void reserve(usz new_capacity) {
+  void reserve(const usz new_capacity) {
     if (new_capacity > m_capacity) {
-      T *new_items = (T *)kmalloc(new_capacity * sizeof(T));
+      T *new_items = static_cast<T *>(kmalloc(new_capacity * sizeof(T)));
       memcpy(new_items, m_items, m_size);
       delete[] m_items;
       m_items = new_items;
@@ -73,16 +73,16 @@ public:
   }
 
   template <typename F>
-  Vector<T> map(F f) {
-    Vector<T> result;
+  Vector map(F f) {
+    Vector result;
     result.reserve(m_size);
     for_each([&](auto item) { result.push(f(item)); });
     return result;
   }
 
   template <typename F>
-  Vector<T> filter(F f) {
-    Vector<T> result;
+  Vector filter(F f) {
+    Vector result;
     result.reserve(m_size);
     for_each([&](auto item) {
       if (f(item))

@@ -1,6 +1,8 @@
 .ccls-cache/
 .idea/
+.cache/
 cmake-build-debug/
+build/
 
 toolchain/bin/
 toolchain/binutils/
@@ -14,3 +16,5 @@ toolchain/libexec/
 toolchain/share/
 
 bin/
+
+compile_commands.json

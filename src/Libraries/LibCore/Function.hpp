@@ -13,7 +13,7 @@ class Function {
   using Callable = R (*)(Args...);
 
 public:
-  Function(Callable callable) : m_callable(callable) {}
+  Function(const Callable callable) : m_callable(callable) {}
 
   R operator()(Args... args) const { return m_callable(forward<Args>(args)...); }
 

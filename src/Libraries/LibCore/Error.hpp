@@ -26,7 +26,7 @@ namespace Core {
 
 class Error {
 public:
-  explicit Error(int error_code) : m_error_code(error_code) {}
+  explicit Error(const int error_code) : m_error_code(error_code) {}
 
   [[nodiscard]] int code() const { return m_error_code; }
 
@@ -41,7 +41,7 @@ public:
   ErrorOr(Error error) : m_has_value(false), m_error(move(error)) {}
 
   T value_or(T other) { return m_has_value ? value() : other; }
-  Error error_or(Error other) { return m_has_value ? error() : other; }
+  Error error_or(const Error other) const { return m_has_value ? error() : other; }
 
   [[nodiscard]] bool has_value() const { return m_has_value; }
   [[nodiscard]] Error error() const { return m_error; }
@@ -71,7 +71,7 @@ private:
 
 template <>
 struct Formatter<Error> {
-  static String format(Error value) {
+  static String format(const Error value) {
     return StringBuilder()
         .append("Error(")
         .append(value.code())

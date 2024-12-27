@@ -35,7 +35,7 @@ template <class, class> auto TestImplicitlyConvertible(...) -> FalseType;
 
 } // namespace Detail
 
-template <typename T> struct IsInteger : FalseType {};
+template <typename> struct IsInteger : FalseType {};
 template <> struct IsInteger<bool> : TrueType {};
 template <> struct IsInteger<char> : TrueType {};
 template <> struct IsInteger<signed char> : TrueType {};
@@ -54,7 +54,7 @@ template <> struct IsInteger<unsigned long long> : TrueType {};
 template <typename T>
 inline constexpr bool IsInteger_V = IsInteger<T>::value;
 
-template <typename T> struct IsFloatingPoint : FalseType {};
+template <typename> struct IsFloatingPoint : FalseType {};
 template <> struct IsFloatingPoint<float> : TrueType {};
 template <> struct IsFloatingPoint<double> : TrueType {};
 template <> struct IsFloatingPoint<long double> : TrueType {};
@@ -84,9 +84,9 @@ template <class T> struct RemoveCV_I { using type = T; };
 template <class T> struct RemoveCV_I<const T> { using type = T; };
 template <class T> struct RemoveCV_I<volatile T> { using type = T; };
 template <class T> struct RemoveCV_I<const volatile T> { using type = T; };
-template <class T> using RemoveCV = RemoveCV_I<T>::type;
+template <class T> using RemoveCV = typename RemoveCV_I<T>::type;
 
-template <typename A, typename B> struct IsSame_I : FalseType {};
+template <typename, typename> struct IsSame_I : FalseType {};
 template <typename A> struct IsSame_I<A, A> : TrueType {};
 
 template <class A, class B> concept IsSame = IsSame_I<A, B>::value;

@@ -15,13 +15,13 @@ class OwnPtr {
 public:
   OwnPtr() = default;
   explicit OwnPtr(T *ptr) : m_ptr(ptr) {}
-  OwnPtr(OwnPtr &&other) : m_ptr(other.leak_ptr()) {}
+  OwnPtr(OwnPtr &&other) noexcept : m_ptr(other.leak_ptr()) {}
   template <typename U> explicit OwnPtr(OwnPtr<U> &&other)
       : m_ptr(static_cast<T *>(other.leak_ptr())) {}
   explicit OwnPtr(std::nullptr_t) {}
   ~OwnPtr() { clear(); }
 
-  OwnPtr &operator=(OwnPtr &&other) {
+  OwnPtr &operator=(OwnPtr &&other) noexcept {
     if (this != &other) {
       delete m_ptr;
       m_ptr = other.leak_ptr();
@@ -77,14 +77,14 @@ public:
   explicit operator const T *() const { return m_ptr; }
   explicit operator T *() { return m_ptr; }
 
-  explicit operator bool() { return m_ptr; }
+  explicit operator bool() const { return m_ptr; }
 
 private:
   T *m_ptr = nullptr;
 };
 
 template <typename T, typename... Args>
-inline OwnPtr<T> make(Args &&...args) {
+OwnPtr<T> make(Args &&...args) {
   return OwnPtr<T>(new T(forward<Args>(args)...));
 }
 
