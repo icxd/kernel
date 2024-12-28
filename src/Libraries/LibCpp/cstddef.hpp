@@ -6,9 +6,9 @@
 
 namespace std {
 
-using size_t = __SIZE_TYPE__;
+  using size_t = __SIZE_TYPE__;
 
-using nullptr_t = decltype(nullptr);
+  using nullptr_t = decltype(nullptr);
 
 } // namespace std
 

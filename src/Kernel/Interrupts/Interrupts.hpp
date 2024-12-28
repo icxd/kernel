@@ -2,12 +2,11 @@
 // Created by icxd on 11/1/24.
 //
 
-
 #pragma once
 
-#include <LibCore/Types.hpp>
-#include <LibCore/Defines.hpp>
 #include "IrqHandler.hpp"
+#include <LibCore/Defines.hpp>
+#include <LibCore/Types.hpp>
 
 union PACKED Descriptor {
   struct {
@@ -59,19 +58,19 @@ union PACKED Descriptor {
 
 namespace GDT {
 
-void write_entry(u16 selector, Descriptor &descriptor);
-void flush();
-void init();
+  void write_entry(u16 selector, Descriptor &descriptor);
+  void flush();
+  void init();
 
 } // namespace GDT
 
 namespace IDT {
 
-void register_irq_handler(u8 irq, IRQHandler &handler);
-void unregister_irq_handler(u8 irq, IRQHandler &handler);
-void register_interrupt_handler(u8 vector, void (*handler)());
-void init();
-void flush();
+  void register_irq_handler(u8 irq, IRQHandler &handler);
+  void unregister_irq_handler(u8 irq, IRQHandler &handler);
+  void register_interrupt_handler(u8 vector, void (*handler)());
+  void init();
+  void flush();
 
 } // namespace IDT
 
@@ -80,8 +79,8 @@ void flush();
 #define LSB(x) ((u8)(x) & 0xff)
 #define MSB(x) ((u8)((x) >> 8) & 0xff)
 
-#define cli() asm volatile("cli" :: : "memory")
-#define sti() asm volatile("sti" :: : "memory")
+#define cli() asm volatile("cli" ::: "memory")
+#define sti() asm volatile("sti" ::: "memory")
 
 #define IRQ_VECTOR_BASE 0x50
 
@@ -105,10 +104,9 @@ struct PACKED RegisterDumpWithExceptionCode {
 
 inline u32 cpu_flags() {
   u32 flags;
-  asm volatile(
-      "pushf\n"
-      "pop %0\n"
-      : "=rm"(flags)::"memory");
+  asm volatile("pushf\n"
+               "pop %0\n"
+               : "=rm"(flags)::"memory");
   return flags;
 }
 

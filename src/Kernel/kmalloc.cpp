@@ -2,12 +2,12 @@
 // Created by icxd on 11/6/24.
 //
 
-#include <LibC/string.h>
-#include <LibCore/Defines.hpp>
 #include "kmalloc.hpp"
 #include "Interrupts/Interrupts.hpp"
 #include "Symbol.hpp"
 #include "kprintf.hpp"
+#include <LibC/string.h>
+#include <LibCore/Defines.hpp>
 
 struct PACKED Allocation {
   size_t start, nchunk;
@@ -26,7 +26,8 @@ u32 g_kmalloc_call_count, g_kfree_call_count;
 bool g_dump_kmalloc_stacks;
 
 bool is_kmalloc_address(const void *ptr) {
-  return (size_t)ptr >= BASE_PHYSICAL && (size_t)ptr <= (BASE_PHYSICAL + POOL_SIZE);
+  return (size_t)ptr >= BASE_PHYSICAL &&
+         (size_t)ptr <= (BASE_PHYSICAL + POOL_SIZE);
 }
 
 void kmalloc_init() {
@@ -45,9 +46,7 @@ void *kmalloc_aligned(size_t size, size_t alignment) {
   return aligned_ptr;
 }
 
-void kfree_aligned(void *ptr) {
-  kfree(((void **)ptr)[-1]);
-}
+void kfree_aligned(void *ptr) { kfree(((void **)ptr)[-1]); }
 
 void *kmalloc_page_aligned(size_t size) {
   void *ptr = kmalloc_aligned(size, PAGE_SIZE);
@@ -89,8 +88,8 @@ void *kmalloc_impl(size_t size) {
 
         chunks_here++;
         if (chunks_here == chunks_needed) {
-          auto *a = (Allocation *) (BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
-          u8 *ptr = (u8 *) a;
+          auto *a = (Allocation *)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
+          u8 *ptr = (u8 *)a;
           ptr += sizeof(Allocation);
           a->nchunk = chunks_needed;
           a->start = first_chunk;
@@ -111,7 +110,8 @@ void *kmalloc_impl(size_t size) {
     }
   }
 
-  kprintf("kmalloc(): PANIC! Out of memory (no suitable block for size {})\n", size);
+  kprintf("kmalloc(): PANIC! Out of memory (no suitable block for size {})\n",
+          size);
   dump_backtrace();
   hcf();
 }

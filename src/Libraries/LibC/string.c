@@ -19,15 +19,15 @@ char *strcpy(char *dest, const char *src) {
 }
 
 void *memcpy(void *dest, const void *src, unsigned long long n) {
-  char *d = (char *) dest;
-  const char *s = (const char *) src;
+  char *d = (char *)dest;
+  const char *s = (const char *)src;
   for (unsigned long long int i = 0; i < n; i++)
     d[i] = s[i];
   return dest;
 }
 
 void *memset(void *s, int c, unsigned long long n) {
-  char *d = (char *) s;
+  char *d = (char *)s;
   for (unsigned long long int i = 0; i < n; i++)
     d[i] = c;
   return s;

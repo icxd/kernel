@@ -2,7 +2,6 @@
 // Created by icxd on 11/6/24.
 //
 
-
 #pragma once
 
 #include <LibCore/Types.hpp>
@@ -21,5 +20,5 @@ protected:
   explicit IRQHandler(u8 irq_number) : m_irq_number(irq_number) {}
 
 private:
-  u8 m_irq_number { 0 };
+  u8 m_irq_number{0};
 };

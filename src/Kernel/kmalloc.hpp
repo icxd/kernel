@@ -4,17 +4,20 @@
 
 #pragma once
 
-#include <LibCpp/cstddef.hpp>
 #include <LibCore/Types.hpp>
+#include <LibCpp/cstddef.hpp>
 
 // FIXME: these should NOT be located here
 #define PAGE_SIZE 4096
 #define PAGE_MASK 0xfffff000
 
 void kmalloc_init();
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void *kmalloc_impl(size_t size);
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void *kmalloc_page_aligned(size_t size);
-[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void *kmalloc_aligned(size_t size, size_t alignment);
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void *
+kmalloc_impl(size_t size);
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void *
+kmalloc_page_aligned(size_t size);
+[[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void *
+kmalloc_aligned(size_t size, size_t alignment);
 void kfree(void *ptr);
 void kfree_aligned(void *ptr);
 
@@ -28,4 +31,6 @@ extern bool g_dump_kmalloc_stacks;
 inline void *operator new(size_t, void *ptr) { return ptr; }
 inline void *operator new[](size_t, void *ptr) { return ptr; }
 
-[[gnu::always_inline]] inline void *kmalloc(size_t size) { return kmalloc_impl(size); }
+[[gnu::always_inline]] inline void *kmalloc(size_t size) {
+  return kmalloc_impl(size);
+}

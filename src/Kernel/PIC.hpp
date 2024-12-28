@@ -8,11 +8,11 @@
 
 namespace PIC {
 
-void enable(u8 irq);
-void disable(u8 irq);
-void eoi(u8 irq);
-void init();
-u16 get_isr();
+  void enable(u8 irq);
+  void disable(u8 irq);
+  void eoi(u8 irq);
+  void init();
+  u16 get_isr();
 
 } // namespace PIC
 

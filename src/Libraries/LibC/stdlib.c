@@ -3,10 +3,10 @@
 //
 
 #include "stdlib.h"
-#include "stdbool.h"
-#include "string.h"
 #include "math.h"
+#include "stdbool.h"
 #include "stddef.h"
+#include "string.h"
 
 static char *reverse(char *s) {
   size_t len = strlen(s);
@@ -77,11 +77,8 @@ char *ultoa(unsigned long value, char *buffer, int radix) {
 }
 
 static double PRECISION = 0.00000000000001;
-static int MAX_NUMBER_STRING_SIZE = 32;
 
-char *ftoa(float value, char *buffer) {
-  return dtoa(value, buffer);
-}
+char *ftoa(float value, char *buffer) { return dtoa(value, buffer); }
 
 char *dtoa(double n, char *s) {
   if (isnan(n)) {

@@ -8,17 +8,19 @@
 
 namespace Core {
 
-template <typename R, typename... Args>
-class Function {
-  using Callable = R (*)(Args...);
+  template <typename R, typename... Args>
+  class Function {
+    using Callable = R (*)(Args...);
 
-public:
-  Function(const Callable callable) : m_callable(callable) {}
+  public:
+    Function(const Callable callable) : m_callable(callable) {}
 
-  R operator()(Args... args) const { return m_callable(forward<Args>(args)...); }
+    R operator()(Args... args) const {
+      return m_callable(forward<Args>(args)...);
+    }
 
-private:
-  Callable m_callable;
-};
+  private:
+    Callable m_callable;
+  };
 
 } // namespace Core

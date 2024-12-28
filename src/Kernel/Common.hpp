@@ -2,12 +2,11 @@
 // Created by icxd on 11/12/24.
 //
 
-
 #pragma once
 
-#include <LibCore/Types.hpp>
-#include <LibCore/Formatting.hpp>
 #include "kprintf.hpp"
+#include <LibCore/Formatting.hpp>
+#include <LibCore/Types.hpp>
 
 template <typename... Args>
 void kpanic(const char *file, usz line, const char *fn, Args... args) {

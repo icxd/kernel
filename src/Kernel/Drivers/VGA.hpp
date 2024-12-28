@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include <LibCore/Types.hpp>
 #include <LibCore/String.hpp>
+#include <LibCore/Types.hpp>
 #include <LibCpp/type_traits.hpp>
 
 enum class VGAColor : u8 {
@@ -37,10 +37,8 @@ static constexpr u8 VGA_SCREEN_HEIGHT = 25;
 class VGA {
 public:
   VGA()
-      : m_ptr((u8 *) 0xb8000)
-      , m_x(0), m_y(0)
-      , m_color(COLOR(VGAColor::White, VGAColor::Black))
-  {}
+      : m_ptr((u8 *)0xb8000), m_x(0), m_y(0),
+        m_color(COLOR(VGAColor::White, VGAColor::Black)) {}
 
   void clear();
 

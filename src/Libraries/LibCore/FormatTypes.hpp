@@ -2,7 +2,6 @@
 // Created by icxd on 11/12/24.
 //
 
-
 #pragma once
 
 enum class FormatterIntegerRepresentation {

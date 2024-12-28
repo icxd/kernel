@@ -26,14 +26,8 @@ const Symbol *symbolicate(u32 address) {
   return nullptr;
 }
 
-void load_symbols() {
+void load_symbols() {}
 
-}
+void init_symbols() {}
 
-void init_symbols() {
-
-}
-
-void dump_backtrace() {
-
-}
+void dump_backtrace() {}

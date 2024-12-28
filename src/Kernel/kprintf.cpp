@@ -2,15 +2,17 @@
 // Created by icxd on 11/6/24.
 //
 
-#include "Common.hpp"
 #include "kprintf.hpp"
-#include <LibC/string.h>
-#include <LibC/stdlib.h>
-#include <LibCore/Types.hpp>
 #include "Drivers/Serial.hpp"
+#include <LibC/stdlib.h>
+#include <LibC/string.h>
+#include <LibCore/Types.hpp>
 
 void kputchar(char ch) { Serial::write(ch); }
-void kputs(const char *s) { while (*s) kputchar(*s++); }
+void kputs(const char *s) {
+  while (*s)
+    kputchar(*s++);
+}
 
 void kprintf(const char *fmt, ...) {
   va_list ap;

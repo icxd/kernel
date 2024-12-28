@@ -3,14 +3,10 @@
 //
 
 #include "IrqHandler.hpp"
+#include "../PIC.hpp"
 
-IRQHandler::~IRQHandler() {
-}
+IRQHandler::~IRQHandler() {}
 
-void IRQHandler::enable_irq() {
-  // TODO: PIC::enable(m_irq_number);
-}
+void IRQHandler::enable_irq() { PIC::enable(m_irq_number); }
 
-void IRQHandler::disable_irq() {
-  // TODO: PIC::disable(m_irq_number);
-}
+void IRQHandler::disable_irq() { PIC::disable(m_irq_number); }

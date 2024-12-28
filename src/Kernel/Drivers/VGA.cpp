@@ -29,7 +29,8 @@ void VGA::putchar(char character) {
 }
 
 void VGA::puts(const char *string) {
-  while (*string) putchar(*string++);
+  while (*string)
+    putchar(*string++);
 }
 
 void VGA::put_newline() {
