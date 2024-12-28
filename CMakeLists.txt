@@ -18,6 +18,8 @@ message(STATUS "C Compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "C Flags: ${CMAKE_C_FLAGS}")
 message(STATUS "C++ Compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "C++ Flags: ${CMAKE_CXX_FLAGS}")
+message(STATUS "ASM Compiler: ${CMAKE_ASM_COMPILER}")
+message(STATUS "ASM Flags: ${CMAKE_ASM_FLAGS}")
 
 function(add_sources)
   foreach(s IN ITEMS ${ARGV})
@@ -38,7 +40,7 @@ include_directories(src/Libraries)
 get_property(SOURCES GLOBAL PROPERTY SourceList)
 add_executable(${KERNEL_BIN} ${SOURCES})
 set_target_properties(${KERNEL_BIN}
-  PROPERTIES LINK_FLAGS "-m32 -march=i386 -T ${CMAKE_CURRENT_LIST_DIR}/link.ld -ffreestanding -O2 -nostdlib -l${CMAKE_CURRENT_LIST_DIR}/src/Libraries/libgcc-i386.a")
+  PROPERTIES LINK_FLAGS "-m32 -march=i386 -T ${CMAKE_CURRENT_LIST_DIR}/link.ld -ffreestanding -O2 -nostdlib")
 add_custom_command(
   TARGET ${KERNEL_BIN}
   POST_BUILD
