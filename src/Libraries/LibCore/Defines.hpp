@@ -7,7 +7,8 @@
 #include <LibC/stdarg.h>
 
 template <typename... Args>
-extern void kpanic(const char *, __SIZE_TYPE__, const char *, Args...);
+extern void kpanic(const char *, __SIZE_TYPE__, const char *, const char *,
+                   Args...);
 
 #define ALIGNED(x) __attribute__((aligned(x)))
 #define PACKED __attribute__((packed))

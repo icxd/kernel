@@ -9,8 +9,9 @@
 #include <LibCore/Types.hpp>
 
 template <typename... Args>
-void kpanic(const char *file, usz line, const char *fn, Args... args) {
+void kpanic(const char *file, usz line, const char *fn, const char *fmt,
+            Args... args) {
   print("\033[31;1mPANIC! (at {}:{} in {}): \033[0m", file, line, fn);
-  errorln(args...);
+  errorln(fmt, args...);
   hcf();
 }

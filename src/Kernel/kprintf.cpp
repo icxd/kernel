@@ -3,6 +3,7 @@
 //
 
 #include "kprintf.hpp"
+#include "Common.hpp"
 #include "Drivers/Serial.hpp"
 #include <LibC/stdlib.h>
 #include <LibC/string.h>
@@ -84,7 +85,7 @@ void kvprintf(const char *fmt, va_list ap) {
         break;
 
       default:
-        PANIC("Unsupported format specifier: {}", fmt[i]);
+        PANIC("Unsupported format specifier: %c", fmt[i]);
       }
 
     } else {

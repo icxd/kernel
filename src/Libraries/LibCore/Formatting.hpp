@@ -41,6 +41,7 @@ namespace Core {
   CORE_BASIC_FORMATTER(char *);
   CORE_BASIC_FORMATTER(const char *);
   CORE_BASIC_FORMATTER(String);
+  CORE_BASIC_FORMATTER(void *);
 
 #undef CORE_BASIC_FORMATTER
 

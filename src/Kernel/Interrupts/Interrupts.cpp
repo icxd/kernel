@@ -239,6 +239,7 @@ namespace IDT {
   void register_irq_handler(u8 irq, IRQHandler &handler) {
     ASSERT(!s_irq_handlers[irq]);
     s_irq_handlers[irq] = &handler;
+    debugln("IRQ handler for {:p}\n", irq, (void *)&handler);
     register_interrupt_handler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
   }
 

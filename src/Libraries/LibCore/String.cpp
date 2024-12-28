@@ -263,4 +263,6 @@ namespace Core {
     return *this;
   }
 
+  StringBuilder &StringBuilder::append(void *ptr) { return append((u64)ptr); }
+
 } // namespace Core

@@ -27,7 +27,7 @@ if(APPLE)
   set(CMAKE_C_LINK_FLAGS "")
   set(CMAKE_CXX_LINK_FLAGS "")
 else()
-  set(TOOLCHAIN ${CMAKE_CURRENT_LIST_DIR}/toolchain)
+  set(TOOLCHAIN ${CMAKE_CURRENT_LIST_DIR})
 
   set(LINKER ${TOOLCHAIN}/bin/i386-elf-ld)
   set(CMAKE_C_COMPILER ${TOOLCHAIN}/bin/i386-elf-gcc)
