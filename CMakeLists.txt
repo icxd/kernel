@@ -8,7 +8,7 @@ message(STATUS "${CMAKE_TOOLCHAIN_FILE}")
 
 set(CMAKE_CXX_STANDARD 23)
 
-set(FLAGS_COMMON "-fno-PIC -W -Wall -ffreestanding -mno-red-zone -nostdinc -static-libgcc -l${CMAKE_CURRENT_LIST_DIR}/src/Libraries/libgcc-i386.a")
+set(FLAGS_COMMON "-fno-PIC -W -Wall -ffreestanding -mno-red-zone -nostdinc -static-libgcc -L${CMAKE_CURRENT_LIST_DIR}/libgcc-i386.a")
 set(CMAKE_C_FLAGS "${FLAGS_COMMON} -m32")
 set(CMAKE_CXX_FLAGS "${FLAGS_COMMON} -m32 -fno-exceptions -fno-rtti -fuse-cxa-atexit -fno-threadsafe-statics")
 set(CMAKE_ASM_FLAGS "${FLAGS_COMMON} -m32")
