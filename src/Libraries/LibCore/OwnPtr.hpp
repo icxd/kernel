@@ -9,8 +9,7 @@
 
 namespace Core {
 
-  template <typename T>
-  class OwnPtr {
+  template <typename T> class OwnPtr {
   public:
     OwnPtr() = default;
     explicit OwnPtr(T *ptr) : m_ptr(ptr) {}
@@ -30,8 +29,7 @@ namespace Core {
       return *this;
     }
 
-    template <typename U>
-    OwnPtr &operator=(OwnPtr<U> &&other) {
+    template <typename U> OwnPtr &operator=(OwnPtr<U> &&other) {
       if (this != static_cast<void *>(&other)) {
         delete m_ptr;
         m_ptr = other.leak_ptr();
@@ -83,8 +81,7 @@ namespace Core {
     T *m_ptr = nullptr;
   };
 
-  template <typename T, typename... Args>
-  OwnPtr<T> make(Args &&...args) {
+  template <typename T, typename... Args> OwnPtr<T> make(Args &&...args) {
     return OwnPtr<T>(new T(forward<Args>(args)...));
   }
 

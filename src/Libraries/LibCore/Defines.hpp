@@ -13,6 +13,7 @@ extern void kpanic(const char *, __SIZE_TYPE__, const char *, const char *,
 #define ALIGNED(x) __attribute__((aligned(x)))
 #define PACKED __attribute__((packed))
 #define NORETURN __attribute__((noreturn))
+#define WEAK __attribute__((weak))
 
 #define CORE_MAKE_NONCOPYABLE(T)                                               \
   T(T const &) = delete;                                                       \

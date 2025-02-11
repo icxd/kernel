@@ -3,9 +3,12 @@
 //
 
 #include "Interrupts.hpp"
+#include "../MemoryManager.hpp"
 #include "../PIC.hpp"
 #include "../kprintf.hpp"
 #include <LibCore/Array.hpp>
+#include <LibCore/Defines.hpp>
+#include <LibCore/Types.hpp>
 
 struct PACKED DescriptorTablePointer {
   u16 limit;
@@ -50,6 +53,15 @@ asm(".global asm_irq_entry\n"
     "    popw %ds\n"
     "    popa\n"
     "    iret\n");
+
+extern volatile u32 exception_state_dump;
+extern volatile u16 exception_code;
+asm(".globl exception_state_dump\n"
+    "exception_state_dump:\n"
+    ".long 0\n"
+    ".globl exception_code\n"
+    "exception_code:\n"
+    ".short 0\n");
 
 #define EH_ENTRY(ec)                                                           \
   extern "C" void exception_##ec##_handler(RegisterDumpWithExceptionCode &);   \
@@ -109,8 +121,7 @@ asm(".global asm_irq_entry\n"
       "    popa\n"                                                             \
       "    iret\n");
 
-template <typename DumpType>
-static void dump(const DumpType &regs) {
+template <typename DumpType> static void dump(const DumpType &regs) {
   u16 ss = regs.ds;
   u32 esp = regs.esp;
 
@@ -149,7 +160,16 @@ EH_ENTRY_FN(14) {
   asm("movl %%cr3, %%eax" : "=a"(fault_page_directory));
 
   dump(regs);
-  // TODO: handle page fault better.
+
+  PageFaultResponse response = MM.handle_page_fault(
+      PageFault(exception_code, LinearAddress(fault_address)));
+  switch (response) {
+  case PageFaultResponse::ShouldCrash:
+    break;
+  case PageFaultResponse::Continue:
+    warnln("Continuing after resolved page fault.");
+    break;
+  }
 }
 
 #define EH(n, msg)                                                             \
@@ -227,6 +247,18 @@ namespace GDT {
                  "sanity:\n");
   }
 
+  u16 allocate_entry() {
+    ASSERT(s_gdt_length < 256);
+    u16 selector = s_gdt_length * 8;
+    s_gdt_length++;
+    return selector;
+  }
+
+  Descriptor &get_entry(u16 selector) {
+    u16 i = (selector & 0xfffc) >> 3;
+    return *(Descriptor *)(&s_gdt[i]);
+  }
+
 } // namespace GDT
 
 namespace IDT {
@@ -287,6 +319,8 @@ namespace IDT {
   void flush() { asm("lidt %0" ::"m"(s_idtr)); }
 
 } // namespace IDT
+
+void load_process_register(u16 selector) { asm("ltr %0" : : "r"(selector)); }
 
 void handle_irq() {
   u16 isr = PIC::get_isr();

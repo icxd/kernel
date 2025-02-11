@@ -1,8 +1,10 @@
 .ccls-cache/
 .idea/
 .cache/
+
 cmake-build-debug/
 build/
+bin/
 
 toolchain/bin/
 toolchain/binutils/
@@ -15,6 +17,12 @@ toolchain/lib/
 toolchain/libexec/
 toolchain/share/
 
-bin/
+src/Kernel/symbol.gen.c
+src/Kernel/symbol.gen.o
 
 compile_commands.json
+qemu.log
+
+compare-symbols.sh
+symbols_stage1
+symbols_stage2

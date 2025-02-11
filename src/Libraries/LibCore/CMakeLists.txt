@@ -1,14 +1,20 @@
 add_sources(
-        Array.hpp
-        Defines.hpp
-        Error.hpp
-        Formatting.hpp
-        FormatTypes.hpp
-        Function.hpp
-        OwnPtr.hpp
-        Parser.hpp
-        String.cpp String.hpp
-        Types.hpp
-        Trait.hpp
-        Vector.hpp
+  Array.hpp
+  Buffer.hpp
+  ByteBuffer.hpp
+  Defines.hpp
+  Error.hpp
+  Formatting.hpp
+  FormatTypes.hpp
+  Function.hpp
+  Hashable.hpp
+  HashTable.hpp
+  OwnPtr.hpp
+  Parser.hpp
+  Retainable.hpp
+  RetainPtr.hpp
+  String.cpp String.hpp
+  Types.hpp
+  Trait.hpp
+  Vector.hpp
 )

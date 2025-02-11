@@ -11,15 +11,13 @@
 
 namespace Core {
 
-  template <typename>
-  struct Formatter {};
+  template <typename> struct Formatter {};
 
   template <typename T>
   concept Formattable = requires(T t) { Formatter<T>::format(t); };
 
 #define CORE_BASIC_FORMATTER(type)                                             \
-  template <>                                                                  \
-  struct Formatter<type> {                                                     \
+  template <> struct Formatter<type> {                                         \
     static String format(type value) {                                         \
       return StringBuilder().append(value).build();                            \
     }                                                                          \
@@ -41,9 +39,14 @@ namespace Core {
   CORE_BASIC_FORMATTER(char *);
   CORE_BASIC_FORMATTER(const char *);
   CORE_BASIC_FORMATTER(String);
-  CORE_BASIC_FORMATTER(void *);
 
 #undef CORE_BASIC_FORMATTER
+
+  template <typename T> struct Formatter<T *> {
+    static String format(T *value) {
+      return StringBuilder().append((u32)value).build();
+    }
+  };
 
   template <typename T>
     requires(Formattable<T>)
@@ -111,9 +114,7 @@ namespace Core {
       }
 
       builder.append(value, integer_repr);
-    }
-
-    if constexpr (IsFloatingPoint_V<T>) {
+    } else if constexpr (IsFloatingPoint_V<T>) {
       switch (type_char) {
       case 'e':
         floating_repr = FormatterFloatingRepresentation::Scientific;
@@ -144,6 +145,9 @@ namespace Core {
       }
 
       builder.append(value, floating_repr);
+    } else {
+      builder.append(
+          Formatter<RemoveConstReference<decltype(value)>>::format(value));
     }
 
     fmt = fmt.substring(close_brace + 1);

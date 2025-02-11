@@ -73,8 +73,8 @@ namespace PIC {
     // interrupts.
     enable(2);
 
-    debugln("PIC(i8259): cascading mode, vectors 0b{:b}-0b{:b}",
-            IRQ_VECTOR_BASE, IRQ_VECTOR_BASE + 0x08);
+    okln("PIC(i8259): cascading mode, vectors 0b{:b}-0b{:b}", IRQ_VECTOR_BASE,
+         IRQ_VECTOR_BASE + 0x08);
   }
 
   u16 get_isr() {

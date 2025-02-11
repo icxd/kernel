@@ -24,12 +24,13 @@ void println(const char *fmt, Args... args) {
   kputchar('\n');
 }
 
-#define COLORED_PRINT(name, color_code)                                        \
+#define COLORED_PRINT(name, prefix, color_code)                                \
   template <typename... Args>                                                  \
   void name(const char *fmt, Args... args) {                                   \
-    kprintf("\033[" #color_code "m");                                          \
+    kprintf("[ ");                                                             \
+    kprintf("\033[" #color_code ";1m" prefix);                                 \
+    kprintf("\033[0m ] ");                                                     \
     kprintf(Core::format(fmt, Core::forward<Args>(args)...).characters());     \
-    kprintf("\033[0m");                                                        \
   }                                                                            \
   template <typename... Args>                                                  \
   void name##ln(const char *fmt, Args... args) {                               \
@@ -37,8 +38,9 @@ void println(const char *fmt, Args... args) {
     kputchar('\n');                                                            \
   }
 
-COLORED_PRINT(debug, 34);
-COLORED_PRINT(warn, 33);
-COLORED_PRINT(error, 31);
+COLORED_PRINT(debug, "DBG ", 37);
+COLORED_PRINT(ok, "OK  ", 32);
+COLORED_PRINT(warn, "WARN", 33);
+COLORED_PRINT(error, "ERR ", 31);
 
 #undef COLORED_PRINT

@@ -8,7 +8,7 @@
 #include <LibCpp/cstddef.hpp>
 
 // FIXME: these should NOT be located here
-#define PAGE_SIZE 4096
+#define PAGE_SIZE 4096zu
 #define PAGE_MASK 0xfffff000
 
 void kmalloc_init();

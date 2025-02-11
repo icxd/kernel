@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "../Common.hpp"
 #include "IrqHandler.hpp"
 #include <LibCore/Defines.hpp>
 #include <LibCore/Types.hpp>
@@ -28,7 +29,7 @@ union PACKED Descriptor {
     u32 low, high;
   };
 
-  enum class Type : u8 {
+  enum Type : u8 {
     Invalid = 0,
     AvailableTSS_16bit = 0x1,
     LDT = 0x2,
@@ -61,6 +62,8 @@ namespace GDT {
   void write_entry(u16 selector, Descriptor &descriptor);
   void flush();
   void init();
+  u16 allocate_entry();
+  Descriptor &get_entry(u16 selector);
 
 } // namespace GDT
 
@@ -73,6 +76,8 @@ namespace IDT {
   void flush();
 
 } // namespace IDT
+
+void load_process_register(u16 selector);
 
 #define LSW(x) ((u16)((u32)(x) & 0xffff))
 #define MSW(x) ((u16)((x) >> 16) & 0xffff)
@@ -124,4 +129,44 @@ public:
 
 private:
   u32 m_flags;
+};
+
+struct PageFaultFlags {
+  enum Flags {
+    NotPresent = 0x00,
+    ProtectionViolation = 0x01,
+    Read = 0x00,
+    Write = 0x02,
+    UserMode = 0x04,
+    SupervisorMode = 0x00,
+    InstructionFetch = 0x08,
+  };
+};
+
+class PageFault {
+public:
+  PageFault(u16 code, LinearAddress addr) : m_code(code), m_addr(addr) {}
+
+  LinearAddress address() const { return m_addr; }
+  u16 code() const { return m_code; }
+
+  bool is_not_present() const {
+    return (m_code & 1) == PageFaultFlags::NotPresent;
+  }
+  bool is_protection_violation() const {
+    return (m_code & 1) == PageFaultFlags::ProtectionViolation;
+  }
+  bool is_read() const { return (m_code & 2) == PageFaultFlags::Read; }
+  bool is_write() const { return (m_code & 2) == PageFaultFlags::Write; }
+  bool is_user() const { return (m_code & 4) == PageFaultFlags::UserMode; }
+  bool is_supervisor() const {
+    return (m_code & 4) == PageFaultFlags::SupervisorMode;
+  }
+  bool is_instruction_fetch() const {
+    return (m_code & 8) == PageFaultFlags::InstructionFetch;
+  }
+
+private:
+  u16 m_code;
+  LinearAddress m_addr;
 };

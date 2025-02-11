@@ -4,7 +4,6 @@
 
 #include "kmalloc.hpp"
 #include "Interrupts/Interrupts.hpp"
-#include "Symbol.hpp"
 #include "kprintf.hpp"
 #include <LibC/string.h>
 #include <LibCore/Defines.hpp>
@@ -59,14 +58,9 @@ void *kmalloc_impl(size_t size) {
   InterruptDisabler disabler;
   g_kmalloc_call_count++;
 
-  if (g_dump_kmalloc_stacks && symbols_ready) {
-    dump_backtrace();
-  }
-
   size_t real_size = size + sizeof(Allocation);
   if (sum_free < real_size) {
-    dump_backtrace();
-    kprintf("kmalloc: out of memory\n");
+    PANIC("kmalloc: out of memory");
     hcf();
   }
 
@@ -110,9 +104,7 @@ void *kmalloc_impl(size_t size) {
     }
   }
 
-  kprintf("kmalloc(): PANIC! Out of memory (no suitable block for size {})\n",
-          size);
-  dump_backtrace();
+  PANIC("kmalloc(): Out of memory (no suitable block for size {})", size);
   hcf();
 }
 
