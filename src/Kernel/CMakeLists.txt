@@ -1,5 +1,7 @@
 add_sources(
   Common.hpp
+  CMOS.cpp CMOS.hpp
+  Disk.hpp Disk.cpp
   Drivers/Serial.cpp Drivers/Serial.hpp
   Drivers/VGA.cpp Drivers/VGA.hpp
   icxxabi.cpp icxxabi.hpp
@@ -12,6 +14,8 @@ add_sources(
   MemoryManager.cpp MemoryManager.hpp
   Multiboot.hpp
   PIC.cpp PIC.hpp
+  PIT.cpp PIT.hpp
   Process.cpp Process.cpp
+  RTC.cpp RTC.hpp
   symbol.h
 )

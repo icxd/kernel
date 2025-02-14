@@ -20,6 +20,11 @@ static char *reverse(char *s) {
 }
 
 char *itoa(int value, char *buffer, int radix) {
+  if (value == 0) {
+    buffer[0] = '0';
+    buffer[1] = '\0';
+    return buffer;
+  }
   char *ptr = buffer;
   int negative = 0;
   if (value < 0) {
@@ -41,6 +46,11 @@ char *utoa(unsigned value, char *buffer, int radix) {
 }
 
 char *ltoa(long value, char *buffer, int radix) {
+  if (value == 0) {
+    buffer[0] = '0';
+    buffer[1] = '\0';
+    return buffer;
+  }
   char *ptr = buffer;
   bool negative = false;
   if (value < 0) {
@@ -59,6 +69,12 @@ char *ltoa(long value, char *buffer, int radix) {
 }
 
 char *ultoa(unsigned long value, char *buffer, int radix) {
+  if (value == 0) {
+    buffer[0] = '0';
+    buffer[1] = '\0';
+    return buffer;
+  }
+
   char *ptr = buffer;
   bool negative = false;
   if (value < 0) {

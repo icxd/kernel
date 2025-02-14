@@ -4,16 +4,12 @@
 
 #pragma once
 
-#include "LibCore/Error.hpp"
 #include "kprintf.hpp"
 #include "symbol.h"
 #include <LibCore/Formatting.hpp>
 #include <LibCore/Types.hpp>
 
-struct Stacktrace {
-  Stacktrace *ebp;
-  u32 eip;
-};
+extern "C" int walk_stack(unsigned int *array, int max_elements);
 
 inline bool get_symbol(symbol_t *symbol, u32 addr) {
   for (u32 i = 0; i < __symbol_tab_size; i++) {
@@ -27,17 +23,16 @@ inline bool get_symbol(symbol_t *symbol, u32 addr) {
 }
 
 inline void print_stack_trace(u32 max_frames = 100) {
-  Stacktrace *stk;
-  asm("movl %%ebp, %0" : "=r"(stk)::);
-  for (u32 frame = 0; stk && frame < max_frames; frame++) {
-    symbol_t symbol;
-    if (get_symbol(&symbol, stk->eip))
-      println("  at \033[33;1m0x{:x}\033[0m <\033[34;1m{}\033[0m>", stk->eip,
-              symbol.name);
-    else
-      println("  at \033[33;1m0x{:x}\033[0m", stk->eip);
+  u32 *addresses = new u32[max_frames];
+  int num_addresses = walk_stack(addresses, max_frames);
 
-    stk = stk->ebp;
+  for (int i = 0; i < num_addresses; i++) {
+    symbol_t symbol;
+    if (get_symbol(&symbol, addresses[i]))
+      println("  at \033[33;1m0x{:x}\033[0m <\033[34;1m{}\033[0m>",
+              addresses[i], symbol.name);
+    else
+      println("  at \033[33;1m0x{:x}\033[0m", addresses[i]);
   }
 }
 
@@ -51,6 +46,12 @@ void kpanic(const char *file, usz line, const char *fn, const char *fmt,
 
   hcf();
 }
+
+struct System {
+  u32 uptime;
+  u32 nprocess, nblocked;
+};
+extern System system;
 
 class PhysicalAddress {
 public:

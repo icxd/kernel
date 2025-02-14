@@ -39,12 +39,13 @@ namespace Core {
   CORE_BASIC_FORMATTER(char *);
   CORE_BASIC_FORMATTER(const char *);
   CORE_BASIC_FORMATTER(String);
+  CORE_BASIC_FORMATTER(bool);
 
 #undef CORE_BASIC_FORMATTER
 
   template <typename T> struct Formatter<T *> {
     static String format(T *value) {
-      return StringBuilder().append((u32)value).build();
+      return StringBuilder().append("0x").append((void *)value).build();
     }
   };
 

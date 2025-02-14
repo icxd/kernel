@@ -58,6 +58,9 @@ public:
   static Process *from_pid(pid_t);
   static Process *kernel_process();
 
+  void block(State state);
+  void unblock();
+
   const String &name() const { return m_name; }
   pid_t pid() const { return m_pid; }
   TSS32 &tss() { return m_tss; }
@@ -67,19 +70,41 @@ public:
   gid_t gid() const { return m_gid; }
   const FarPtr &far_ptr() const { return m_far_ptr; }
 
+  static void process_did_crash(Process *crashed_process);
+  static void do_house_keeping();
+
+  void set_wakeup_time(u32 t) { m_wakeup_time = t; }
+  u32 wakeup_time() const { return m_wakeup_time; }
+
+  static void prep_for_iret_to_new_process();
+
+  bool tick() {
+    m_ticks++;
+    return m_ticks_left--;
+  }
+  void set_ticks_left(u32 t) { m_ticks_left = t; }
+
   void set_selector(u16 s) { m_far_ptr.selector = s; }
+  void set_state(State state) { m_state = state; }
+
+  pid_t parent_pid() const { return m_parent_pid; }
+
+  static void initialize();
 
   const Vector<Core::RetainPtr<Region>> &regions() const { return m_regions; };
   const Vector<Core::OwnPtr<Subregion>> &subregions() const {
     return m_subregions;
   };
+  void dump_regions();
 
-  pid_t parent_pid() const { return m_parent_pid; }
+  void did_schedule() { m_times_scheduled++; }
+  u32 times_scheduled() const { return m_times_scheduled; }
 
-  static void initilize();
+  pid_t waitee() const { return m_waitee; }
 
 private:
   friend class MemoryManager;
+  friend bool schedulue_new_process();
 
   Process(String &&name, uid_t, gid_t, pid_t parent_pid, RingLevel);
 
@@ -91,6 +116,9 @@ private:
   pid_t m_pid = 0, m_parent_pid = 0;
   uid_t m_uid = 0;
   gid_t m_gid = 0;
+  u32 m_ticks = 0, m_ticks_left = 0;
+  u32 m_wakeup_time = 0;
+  u32 m_stack_top_0 = 0, m_stack_top_3 = 0;
   FarPtr m_far_ptr;
   State m_state = INVALID;
   TSS32 m_tss;
@@ -98,6 +126,8 @@ private:
   RingLevel m_ring = RING_0;
   int m_error = 0;
   void *m_kernel_stack = nullptr;
+  u32 m_times_scheduled = 0;
+  pid_t m_waitee = -1;
 
 public:
   struct Region : Core::Retainable<Region> {
@@ -131,3 +161,12 @@ private:
 
   LinearAddress m_next_region;
 };
+
+extern void process_init();
+extern void yield();
+extern bool schedule_new_process();
+extern void switch_now();
+extern void block(Process::State);
+extern void sleep(u32 ticks);
+
+extern Process *s_current;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "LibCore/Defines.hpp"
+#include "LibCore/Vector.hpp"
 #include <LibCpp/cstddef.hpp>
 
 template <typename T> struct InlineLinkedListNode {
@@ -40,7 +41,22 @@ public:
 
   inline T *tail() const { return m_tail; }
 
-  inline void prepend(T *node) {}
+  inline void prepend(T *node) {
+    if (!m_head) {
+      ASSERT(!m_tail);
+      m_head = node;
+      m_tail = node;
+      node->set_prev(0);
+      node->set_next(0);
+      return;
+    }
+
+    ASSERT(m_tail);
+    m_head->set_prev(node);
+    node->set_next(m_head);
+    node->set_prev(0);
+    m_head = node;
+  }
   inline void append(T *node) {
     if (!m_tail) {
       ASSERT(!m_head);
@@ -74,6 +90,11 @@ public:
     }
   }
   inline void append(InlineLinkedList<T> &other) {}
+
+  Vector<T> to_vector() const {
+    Vector<T> vec{};
+    return vec;
+  }
 
 private:
   T *m_head{nullptr}, *m_tail{nullptr};

@@ -120,27 +120,42 @@ asm(".globl exception_state_dump\n"
       "    popw %ds\n"                                                         \
       "    popa\n"                                                             \
       "    iret\n");
-
 template <typename DumpType> static void dump(const DumpType &regs) {
   u16 ss = regs.ds;
   u32 esp = regs.esp;
 
   if constexpr (Core::IsSame<DumpType, RegisterDumpWithExceptionCode>)
-    kprintf("exception code: %w\n", regs.exception_code);
+    println("exception code: {}", regs.exception_code);
 
-  kprintf("  pc=%w:%x ds=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es,
-          regs.fs, regs.gs);
-  kprintf(" stk=%w:%x\n", ss, esp);
-  kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx,
-          regs.edx);
-  kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+  println("  pc={}:0x{:x} ds={} fs={} gs={}", regs.cs, regs.eip, regs.ds,
+          regs.es, regs.fs, regs.gs);
+  println(" stk={}:0x{:x}", ss, esp);
+  println("eax=0x{:x} ebx=0x{:x} ecx=0x{:x} edx=0x{:x}", regs.eax, regs.ebx,
+          regs.ecx, regs.edx);
+  println("ebp=0x{:x} esp=0x{:x} esi=0x{:x} edi=0x{:x}", regs.ebp, esp,
+          regs.esi, regs.edi);
 }
 
 template <typename DumpType>
 static void handle_crash(DumpType &regs, const char *message) {
-  kprintf("\033[31;1mCRASH: %s\033[0m", message);
+  println("\033[31;1mCRASH: {}\033[0m", message);
+
+  u16 ss;
+  u32 esp;
+  if (s_current->is_ring0()) {
+    ss = regs.ds;
+    esp = regs.esp;
+  } else {
+    ss = regs.ss_if_cross_ring;
+    esp = regs.esp_if_cross_ring;
+  }
 
   dump(regs);
+
+  if (s_current->is_ring0())
+    PANIC("Oh shit, we've crashed in ring 0 :(");
+
+  Process::process_did_crash(s_current);
 }
 
 #define EH_ENTRY_FN(n)                                                         \
@@ -159,12 +174,24 @@ EH_ENTRY_FN(14) {
   u32 fault_page_directory;
   asm("movl %%cr3, %%eax" : "=a"(fault_page_directory));
 
+  okln("Ring{} page fault in {}({}), %s laddr={}\n", regs.cs & 3,
+       s_current->name().characters(), s_current->pid(),
+       exception_code & 2 ? "write" : "read", fault_address);
+
   dump(regs);
+
+  u8 *codeptr = (u8 *)regs.eip;
+  errorln("code: {} {} {} {} {} {} {} {}", codeptr[0], codeptr[1], codeptr[2],
+          codeptr[3], codeptr[4], codeptr[5], codeptr[6], codeptr[7]);
+
+  if (s_current->is_ring0())
+    hcf();
 
   PageFaultResponse response = MM.handle_page_fault(
       PageFault(exception_code, LinearAddress(fault_address)));
   switch (response) {
   case PageFaultResponse::ShouldCrash:
+    Process::process_did_crash(s_current);
     break;
   case PageFaultResponse::Continue:
     warnln("Continuing after resolved page fault.");
@@ -174,13 +201,16 @@ EH_ENTRY_FN(14) {
 
 #define EH(n, msg)                                                             \
   static void _exception##n() {                                                \
-    kprintf(msg "\n");                                                         \
+    errorln(msg);                                                              \
     u32 cr0, cr2, cr3, cr4;                                                    \
     asm("movl %%cr0, %%eax" : "=a"(cr0));                                      \
     asm("movl %%cr2, %%eax" : "=a"(cr2));                                      \
     asm("movl %%cr3, %%eax" : "=a"(cr3));                                      \
     asm("movl %%cr4, %%eax" : "=a"(cr4));                                      \
-    kprintf("CR0=%x CR2=%x CR3=%x CR4=%x\n", cr0, cr2, cr3, cr4);              \
+    errorln("  cr0=\033[31;1m0x{:x}\033[0m", cr0);                             \
+    errorln("  cr2=\033[31;1m0x{:x}\033[0m", cr2);                             \
+    errorln("  cr3=\033[31;1m0x{:x}\033[0m", cr3);                             \
+    errorln("  cr4=\033[31;1m0x{:x}\033[0m", cr4);                             \
     hcf();                                                                     \
   }
 
@@ -219,13 +249,11 @@ namespace GDT {
   }
 
   void init() {
-    s_gdt_length = 5;
-
     s_gdt_freelist = new Array<u16, 256>();
     for (usz i = s_gdt_length; i < 256; i++)
       s_gdt_freelist->set(i, i * 8);
 
-    s_gdt_length = 256;
+    s_gdt_length = 5;
     s_gdtr.address = s_gdt;
     s_gdtr.limit = s_gdt_length * 8 - 1;
 

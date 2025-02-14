@@ -5,6 +5,8 @@
 #pragma once
 
 #include "Defines.hpp"
+#include "LibCore/Formatting.hpp"
+#include "LibCore/String.hpp"
 #include "Types.hpp"
 
 namespace Core {
@@ -195,6 +197,21 @@ namespace Core {
     }
 
     VectorImpl<T> *m_impl{nullptr};
+  };
+
+  template <typename T> struct Formatter<Vector<T>> {
+    static String format(const Vector<T> &vec) {
+      StringBuilder builder;
+      builder.append('[');
+      for (usz i = 0; i < vec.size(); i++) {
+        const auto &item = vec.at(i);
+        builder.append(item);
+        if (i + 1 >= vec.size())
+          builder.append(", ");
+      }
+      builder.append(']');
+      return builder.build();
+    }
   };
 
 } // namespace Core

@@ -4,6 +4,7 @@
 
 #include "String.hpp"
 #include "Defines.hpp"
+#include "LibCore/FormatTypes.hpp"
 #include <LibC/stdlib.h>
 #include <LibC/string.h>
 
@@ -263,6 +264,8 @@ namespace Core {
     return *this;
   }
 
-  StringBuilder &StringBuilder::append(void *ptr) { return append((u64)ptr); }
+  StringBuilder &StringBuilder::append(void *ptr) {
+    return append((u32)ptr, FormatterIntegerRepresentation::Hexadecimal);
+  }
 
 } // namespace Core

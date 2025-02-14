@@ -2,26 +2,41 @@
 // Created by icxd on 10/28/24.
 //
 
+#include "CMOS.hpp"
 #include "Common.hpp"
+#include "Disk.hpp"
 #include "Drivers/Serial.hpp"
 #include "Drivers/VGA.hpp"
 #include "Interrupts/Interrupts.hpp"
 #include "MemoryManager.hpp"
 #include "Multiboot.hpp"
 #include "PIC.hpp"
+#include "PIT.hpp"
 #include "Process.hpp"
+#include "RTC.hpp"
 #include "kmalloc.hpp"
 #include "kprintf.hpp"
-#include "symbol.h"
 #include <LibCore/ByteBuffer.hpp>
 #include <LibCore/Defines.hpp>
 #include <LibCore/OwnPtr.hpp>
 #include <LibCore/Types.hpp>
 #include <LibCore/Vector.hpp>
 
+System system;
+
+static void undertaker_main() NORETURN;
+static void undertaker_main() {
+  for (;;) {
+    Process::do_house_keeping();
+    sleep(300);
+  }
+}
+
 static void init_stage2() NORETURN;
 static void init_stage2() {
   okln("init stage2...");
+
+  Disk::initialize();
 
   VGA vga;
   vga.clear();
@@ -43,6 +58,8 @@ static void init_stage2() {
 }
 
 extern "C" void kmain(const u32 multiboot_magic, const usz multiboot_ptr) {
+  cli();
+
   TRY_OR_PANIC(Serial::init());
   kmalloc_init();
 
@@ -77,14 +94,31 @@ extern "C" void kmain(const u32 multiboot_magic, const usz multiboot_ptr) {
   warnln("logger test");
   errorln("logger test");
 
+  RTC::initialize();
   PIC::init();
   GDT::init();
   IDT::init();
 
   MemoryManager::initialize();
 
-  Process::initilize();
+  PIT::initialize();
+
+  memset(&system, 0, sizeof(system));
+
+  u32 base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
+  u32 ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
+
+  okln("{} kB base memory", base_memory);
+  okln("{} kB extended memory", ext_memory);
+
+  Process::initialize();
+  Process::create_kernel_process(undertaker_main, String("undertaker"));
   Process::create_kernel_process(init_stage2, String("init"));
 
-  hcf();
+  schedule_new_process();
+
+  sti();
+
+  for (;;)
+    asm("hlt");
 }

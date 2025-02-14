@@ -20,7 +20,7 @@ namespace Core {
       if (!m_elements)
         return;
       if (m_owned)
-        kfree(m_elements);
+        delete[] m_elements;
       m_elements = nullptr;
     }
 
@@ -62,7 +62,7 @@ namespace Core {
   };
 
   template <typename T> inline Buffer<T>::Buffer(size_t size) : m_size(size) {
-    m_elements = static_cast<T *>(kmalloc(size * sizeof(T)));
+    m_elements = new T[size];
     m_owned = true;
   }
 
@@ -71,7 +71,7 @@ namespace Core {
                            ConstructionMode mode)
       : m_size(size) {
     ASSERT(mode == Copy);
-    m_elements = static_cast<T *>(kmalloc(size * sizeof(T)));
+    m_elements = new T[size];
     memcpy(m_elements, elements, size * sizeof(T));
     m_owned = true;
   }
