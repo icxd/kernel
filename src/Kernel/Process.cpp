@@ -389,7 +389,6 @@ bool context_switch(Process *process) {
 }
 
 bool schedule_new_process() {
-  cli();
   // make sure interrupts are disabled
   ASSERT(!(cpu_flags() & 0x200));
 
