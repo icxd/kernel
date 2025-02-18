@@ -8,6 +8,7 @@
 #include "Drivers/Serial.hpp"
 #include "Drivers/VGA.hpp"
 #include "Interrupts/Interrupts.hpp"
+#include "LibCore/String.hpp"
 #include "MemoryManager.hpp"
 #include "Multiboot.hpp"
 #include "PIC.hpp"
@@ -18,9 +19,15 @@
 #include "kprintf.hpp"
 #include <LibCore/ByteBuffer.hpp>
 #include <LibCore/Defines.hpp>
+#include <LibCore/DistinctNumeric.hpp>
+#include <LibCore/Enum.hpp>
 #include <LibCore/OwnPtr.hpp>
 #include <LibCore/Types.hpp>
 #include <LibCore/Vector.hpp>
+
+CORE_MAKE_DISTINCT_NUMERIC_TYPE(Test, u32);
+CORE_MAKE_ENUM(Color, Test, Red = Test(0xff0000), Green = Test(0x00ff00),
+               Blue = Test(0x0000ff));
 
 System system;
 
@@ -88,11 +95,6 @@ extern "C" void kmain(const u32 multiboot_magic, const usz multiboot_ptr) {
            mmap->size, mmap->addr >> 32, mmap->addr & 0xffffffff,
            mmap->len >> 32, mmap->len & 0xffffffff, mmap->type);
   }
-
-  debugln("logger test");
-  okln("logger test");
-  warnln("logger test");
-  errorln("logger test");
 
   RTC::initialize();
   PIC::init();

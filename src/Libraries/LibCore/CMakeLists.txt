@@ -3,6 +3,9 @@ add_sources(
   Buffer.hpp
   ByteBuffer.hpp
   Defines.hpp
+  DistinctNumeric.hpp
+  DoublyLinkedList.hpp
+  Enum.hpp
   Error.hpp
   Formatting.hpp
   FormatTypes.hpp

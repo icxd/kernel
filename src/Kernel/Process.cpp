@@ -167,10 +167,10 @@ static void redo_kernel_process_tss() {
 
   Descriptor &tss = GDT::get_entry(s_kernel_process->selector());
   tss.set_base((u32)(&s_kernel_process->tss()));
-  tss.set_limit(0xffff);
+  tss.set_limit(sizeof(s_kernel_process->tss()));
   tss.dpl = 0;
   tss.present = 1;
-  tss.granularity = 1;
+  tss.granularity = 0;
   tss.zero = 0;
   tss.operation_size = 1;
   tss.descriptor_type = 0;
@@ -371,14 +371,11 @@ bool context_switch(Process *process) {
     process->set_selector(GDT::allocate_entry());
 
   auto &descriptor = GDT::get_entry(process->selector());
-  descriptor.limit_high = 0;
-  descriptor.limit_low = 0xFFFF;
-  descriptor.base_low = (u32)(&process->tss()) & 0xFFFF;
-  descriptor.base_high = ((u32)(&process->tss()) >> 16) & 0xFF;
-  descriptor.base_highest = ((u32)(&process->tss()) >> 24) & 0xFF;
+  descriptor.set_base((u32)&process->tss());
+  descriptor.set_limit(sizeof(process->tss()));
   descriptor.dpl = 0;
   descriptor.present = 1;
-  descriptor.granularity = 1;
+  descriptor.granularity = 0;
   descriptor.zero = 0;
   descriptor.operation_size = 1;
   descriptor.descriptor_type = 0;
@@ -390,6 +387,7 @@ bool context_switch(Process *process) {
 
 bool schedule_new_process() {
   // make sure interrupts are disabled
+  cli();
   ASSERT(!(cpu_flags() & 0x200));
 
   if (!s_current)

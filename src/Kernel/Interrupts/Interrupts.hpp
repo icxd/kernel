@@ -18,11 +18,11 @@ union PACKED Descriptor {
     u8 dpl : 2;
     u8 present : 1;
     u8 limit_high : 4;
-    u8 : 1;
+    u8 avl : 1;
     u8 zero : 1;
     u8 operation_size : 1;
     u8 granularity : 1;
-    u8 base_highest;
+    u8 base_highest : 4;
   };
 
   struct {
@@ -45,7 +45,7 @@ union PACKED Descriptor {
     TrapGate_32bit = 0xf,
   };
 
-  void set_base(u16 base) {
+  void set_base(u32 base) {
     base_low = base & 0xffff;
     base_high = (base >> 16) & 0xff;
     base_highest = (base >> 24) & 0xff;
@@ -80,12 +80,12 @@ namespace IDT {
 void load_process_register(u16 selector);
 
 #define LSW(x) ((u16)((u32)(x) & 0xffff))
-#define MSW(x) ((u16)((x) >> 16) & 0xffff)
+#define MSW(x) ((u16)((u32)(x) >> 16) & 0xffff)
 #define LSB(x) ((u8)(x) & 0xff)
 #define MSB(x) ((u8)((x) >> 8) & 0xff)
 
-#define cli() asm volatile("cli" ::: "memory")
-#define sti() asm volatile("sti" ::: "memory")
+#define cli() asm volatile("cli")
+#define sti() asm volatile("sti")
 
 #define IRQ_VECTOR_BASE 0x50
 
