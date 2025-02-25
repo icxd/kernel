@@ -61,7 +61,10 @@ static void init_stage2() {
   OwnPtr<String> s = make<String>("Hello, world!\n");
   vga.puts(*s);
 
-  hcf();
+  for (;;) {
+    sleep(3600 * TICKS_PER_SECOND);
+    asm("hlt");
+  }
 }
 
 extern "C" void kmain(const u32 multiboot_magic, const usz multiboot_ptr) {
@@ -110,8 +113,8 @@ extern "C" void kmain(const u32 multiboot_magic, const usz multiboot_ptr) {
   u32 base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
   u32 ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
 
-  okln("{} kB base memory", base_memory);
-  okln("{} kB extended memory", ext_memory);
+  okln("0x{:<8x} kB base memory", base_memory);
+  okln("0x{:>8x} kB extended memory", ext_memory);
 
   Process::initialize();
   Process::create_kernel_process(undertaker_main, String("undertaker"));

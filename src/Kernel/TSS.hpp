@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Common.hpp"
+#include <LibCore/Formatting.hpp>
+#include <LibCore/String.hpp>
 
 struct TSS32 {
   u16 backlink, __blh;
@@ -21,3 +23,14 @@ struct TSS32 {
   u16 ldt, __ldth;
   u16 trace, iomapbase;
 } PACKED;
+
+namespace Core {
+  template <> struct Formatter<TSS32> {
+    static String format(const TSS32 &value) {
+      StringBuilder builder;
+      builder.append("  backlink = ").append(value.backlink).append('\n');
+      builder.append("  __blh = ").append(value.__blh).append('\n');
+      return builder.build();
+    }
+  };
+} // namespace Core

@@ -58,7 +58,7 @@ public:
   static Process *from_pid(pid_t);
   static Process *kernel_process();
 
-  void block(State state);
+  static void block(State state);
   void unblock();
 
   const String &name() const { return m_name; }

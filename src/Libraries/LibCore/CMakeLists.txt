@@ -7,6 +7,7 @@ add_sources(
   DoublyLinkedList.hpp
   Enum.hpp
   Error.hpp
+  Foreach.hpp
   Formatting.hpp
   FormatTypes.hpp
   Function.hpp

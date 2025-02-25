@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Foreach.hpp"
 #include "FormatTypes.hpp"
 #include "String.hpp"
 #include "Trait.hpp"
@@ -41,6 +42,17 @@ namespace Core {
   CORE_BASIC_FORMATTER(String);
   CORE_BASIC_FORMATTER(bool);
 
+#define CORE_FORMAT_STRUCT(structure, ...)                                     \
+  template <> struct Core::Formatter<structure> {                              \
+    static ::String format(structure value) {                                  \
+      ::StringBuilder builder;                                                 \
+      CORE_FOREACH(CORE_FORMAT_STRUCT_FIELD, __VA_ARGS__);                     \
+      return builder.build();                                                  \
+    }                                                                          \
+  }
+#define CORE_FORMAT_STRUCT_FIELD(field)                                        \
+  builder.append("  " #field " = ").append(value.field).append('\n');
+
 #undef CORE_BASIC_FORMATTER
 
   template <typename T> struct Formatter<T *> {
@@ -70,13 +82,18 @@ namespace Core {
       return;
     }
 
-    // format_spec     ::=
-    // [[fill]align][sign]["z"]["#"]["0"][width][grouping_option]["."
-    // precision][type] fill            ::=  <any character> align           ::=
-    // "<" | ">" | "=" | "^" sign            ::=  "+" | "-" | " " width ::=
-    // digit+ grouping_option ::=  "_" | "," precision       ::=  digit+ type
-    // ::=  "b" | "c" | "d" | "e" | "E" | "f" | "F" | "g" | "G" | "n" | "o" |
-    // "s" | "x" | "X" | "%"
+    // clang-format off
+    // format_spec ::= [[fill]align][sign]["z"]["#"]["0"][width][grouping_option]["." precision][type]
+    // fill ::=  <any character>
+    // align ::= "<" | ">" | "=" | "^"
+    // sign ::=  "+" | "-" | " "
+    // width ::= digit+
+    // grouping_option ::= "_" | ","
+    // precision ::= digit+
+    // type ::=  "b" | "c" | "d" | "e" | "E" | "f" | "F" | "g" | "G" | "n" | "o" | "s" | "x" | "X" | "%"
+    // clang-format on
+
+    // const isz align_char = fmt.
 
     const isz close_brace = fmt.find('}', open_brace + 1);
     if (close_brace == -1)

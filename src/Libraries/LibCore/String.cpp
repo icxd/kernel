@@ -268,4 +268,8 @@ namespace Core {
     return append((u32)ptr, FormatterIntegerRepresentation::Hexadecimal);
   }
 
+  StringBuilder &StringBuilder::append(bool value) {
+    return append(value ? "true" : "false");
+  }
+
 } // namespace Core

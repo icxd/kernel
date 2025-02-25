@@ -64,10 +64,11 @@ asm(".globl exception_state_dump\n"
     ".short 0\n");
 
 #define EH_ENTRY(ec)                                                           \
-  extern "C" void exception_##ec##_handler(RegisterDumpWithExceptionCode &);   \
+  extern "C" void exception_##ec##_handler();                                  \
   extern "C" void exception_##ec##_entry();                                    \
-  asm(".global exception_" #ec "_entry\n"                                      \
-      "exception_" #ec "_entry:\n"                                             \
+  asm(".globl exception_" #ec "_entry\n"                                       \
+      "exception_" #ec "_entry: \n"                                            \
+      "    pop exception_code\n"                                               \
       "    pusha\n"                                                            \
       "    pushw %ds\n"                                                        \
       "    pushw %es\n"                                                        \
@@ -82,7 +83,7 @@ asm(".globl exception_state_dump\n"
       "    popw %es\n"                                                         \
       "    popw %fs\n"                                                         \
       "    popw %gs\n"                                                         \
-      "    mov %esp, %eax\n"                                                   \
+      "    mov %esp, exception_state_dump\n"                                   \
       "    call exception_" #ec "_handler\n"                                   \
       "    popw %gs\n"                                                         \
       "    popw %gs\n"                                                         \
@@ -90,10 +91,10 @@ asm(".globl exception_state_dump\n"
       "    popw %es\n"                                                         \
       "    popw %ds\n"                                                         \
       "    popa\n"                                                             \
-      "    add $0x4, %esp\n"                                                   \
       "    iret\n");
+
 #define EH_ENTRY_NO_CODE(ec)                                                   \
-  extern "C" void exception_##ec##_handler(RegisterDump &);                    \
+  extern "C" void exception_##ec##_handler();                                  \
   extern "C" void exception_##ec##_entry();                                    \
   asm(".globl exception_" #ec "_entry\n"                                       \
       "exception_" #ec "_entry: \n"                                            \
@@ -111,7 +112,7 @@ asm(".globl exception_state_dump\n"
       "    popw %es\n"                                                         \
       "    popw %fs\n"                                                         \
       "    popw %gs\n"                                                         \
-      "    mov %esp, %eax\n"                                                   \
+      "    mov %esp, exception_state_dump\n"                                   \
       "    call exception_" #ec "_handler\n"                                   \
       "    popw %gs\n"                                                         \
       "    popw %gs\n"                                                         \
@@ -120,6 +121,7 @@ asm(".globl exception_state_dump\n"
       "    popw %ds\n"                                                         \
       "    popa\n"                                                             \
       "    iret\n");
+
 template <typename DumpType> static void dump(const DumpType &regs) {
   u16 ss = regs.ds;
   u32 esp = regs.esp;
@@ -127,13 +129,17 @@ template <typename DumpType> static void dump(const DumpType &regs) {
   if constexpr (Core::IsSame<DumpType, RegisterDumpWithExceptionCode>)
     println("exception code: {}", regs.exception_code);
 
-  println("  pc={}:0x{:x} ds={} fs={} gs={}", regs.cs, regs.eip, regs.ds,
-          regs.es, regs.fs, regs.gs);
-  println(" stk={}:0x{:x}", ss, esp);
-  println("eax=0x{:x} ebx=0x{:x} ecx=0x{:x} edx=0x{:x}", regs.eax, regs.ebx,
-          regs.ecx, regs.edx);
-  println("ebp=0x{:x} esp=0x{:x} esi=0x{:x} edi=0x{:x}", regs.ebp, esp,
-          regs.esi, regs.edi);
+  println(
+      "  pc=\033[33;1m{}\033[0m:\033[33;1m0x{:x}\033[0m ds=\033[33;1m{}\033[0m "
+      "fs=\033[33;1m{}\033[0m gs=\033[33;1m{}\033[0m",
+      regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+  println(" stk=\033[33;1m{}\033[0m:\033[33;1m0x{:x}\033[0m", ss, esp);
+  println("eax=\033[33;1m0x{:x}\033[0m ebx=\033[33;1m0x{:x}\033[0m "
+          "ecx=\033[33;1m0x{:x}\033[0m edx=\033[33;1m0x{:x}\033[0m",
+          regs.eax, regs.ebx, regs.ecx, regs.edx);
+  println("ebp=\033[33;1m0x{:x}\033[0m esp=\033[33;1m0x{:x}\033[0m "
+          "esi=\033[33;1m0x{:x}\033[0m edi=\033[33;1m0x{:x}\033[0m",
+          regs.ebp, esp, regs.esi, regs.edi);
 }
 
 template <typename DumpType>
@@ -158,16 +164,28 @@ static void handle_crash(DumpType &regs, const char *message) {
   Process::process_did_crash(s_current);
 }
 
-#define EH_ENTRY_FN(n)                                                         \
-  EH_ENTRY(n) void exception_##n##_handler(RegisterDumpWithExceptionCode &regs)
+#define EH_ENTRY_FN(n) EH_ENTRY(n) void exception_##n##_handler()
 #define EH_ENTRY_NO_CODE_FN(n)                                                 \
-  EH_ENTRY_NO_CODE(n) void exception_##n##_handler(RegisterDump &regs)
+  EH_ENTRY_NO_CODE(n) void exception_##n##_handler()
 
-EH_ENTRY_NO_CODE_FN(0) { handle_crash(regs, "Division by zero"); }
-EH_ENTRY_NO_CODE_FN(6) { handle_crash(regs, "Illegal instruction"); }
-EH_ENTRY_NO_CODE_FN(7) { handle_crash(regs, "FPU not available, TODO!"); }
-EH_ENTRY_FN(13) { handle_crash(regs, "General protection fault"); }
+EH_ENTRY_NO_CODE_FN(0) {
+  auto &regs = *reinterpret_cast<RegisterDump *>(exception_state_dump);
+  handle_crash(regs, "Division by zero");
+}
+EH_ENTRY_NO_CODE_FN(6) {
+  auto &regs = *reinterpret_cast<RegisterDump *>(exception_state_dump);
+  handle_crash(regs, "Illegal instruction");
+}
+EH_ENTRY_NO_CODE_FN(7) {
+  auto &regs = *reinterpret_cast<RegisterDump *>(exception_state_dump);
+  handle_crash(regs, "FPU not available, TODO!");
+}
+EH_ENTRY_FN(13) {
+  auto &regs = *reinterpret_cast<RegisterDump *>(exception_state_dump);
+  handle_crash(regs, "General protection fault");
+}
 EH_ENTRY_FN(14) {
+  auto &regs = *reinterpret_cast<RegisterDump *>(exception_state_dump);
   u32 fault_address;
   asm("movl %%cr2, %%eax" : "=a"(fault_address));
 
@@ -348,7 +366,7 @@ namespace IDT {
 
 } // namespace IDT
 
-void load_process_register(u16 selector) { asm("ltr %0" : : "r"(selector)); }
+void load_task_register(u16 selector) { asm("ltr %0" : : "r"(selector)); }
 
 void handle_irq() {
   u16 isr = PIC::get_isr();

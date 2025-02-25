@@ -14,14 +14,14 @@ static MemoryManager *s_instance;
 MemoryManager &MM { return *s_instance; }
 
 MemoryManager::MemoryManager() {
-  m_page_directory = (u32 *)0x5000;
-  m_page_table_zero = (u32 *)0x6000;
-  m_page_table_one = (u32 *)0x7000;
+  m_page_directory = reinterpret_cast<u32 *>(0x5000);
+  m_page_table_zero = reinterpret_cast<u32 *>(0x6000);
+  m_page_table_one = reinterpret_cast<u32 *>(0x7000);
 
   initialize_paging();
 }
 
-MemoryManager::~MemoryManager() {}
+MemoryManager::~MemoryManager() = default;
 
 void MemoryManager::initialize_paging() {
   static_assert(sizeof(MemoryManager::PageDirectoryEntry) == 4);
@@ -48,32 +48,31 @@ void MemoryManager::initialize_paging() {
 
 void *MemoryManager::allocate_page_table() {
   auto ppages = allocate_physical_pages(1);
-  u32 addr = ppages.at(0).get();
+  const u32 addr = ppages.at(0).get();
   identity_map(LinearAddress(addr), 4096);
-  return (void *)addr;
+  return reinterpret_cast<void *>(addr);
 }
 
-auto MemoryManager::ensure_pte(LinearAddress addr) -> PageTableEntry {
+auto MemoryManager::ensure_pte(const LinearAddress addr) -> PageTableEntry {
   // make sure interrupts are disabled
   ASSERT(!(cpu_flags() & 0x200));
-  u32 page_directory_index = (addr.get() >> 22) & 0x3ff;
-  u32 page_table_index = (addr.get() >> 12) & 0x3ff;
+  const u32 page_directory_index = (addr.get() >> 22) & 0x3ff;
+  const u32 page_table_index = (addr.get() >> 12) & 0x3ff;
 
-  PageDirectoryEntry pde =
-      PageDirectoryEntry(&m_page_directory[page_directory_index]);
+  const auto pde = PageDirectoryEntry(&m_page_directory[page_directory_index]);
   if (!pde.is_present()) {
     okln("[MM] PDE {} not present, allocating", page_directory_index);
 
     if (page_directory_index == 0) {
-      pde.set_page_table_base((u32)m_page_table_zero);
+      pde.set_page_table_base(reinterpret_cast<u32>(m_page_table_zero));
     } else if (page_directory_index == 1) {
-      pde.set_page_table_base((u32)m_page_table_one);
+      pde.set_page_table_base(reinterpret_cast<u32>(m_page_table_one));
     } else {
       auto *page_table = allocate_page_table();
       okln("[MM] allocated page table #{} (for laddr={:p}) at {:p}",
            page_directory_index, addr.get(), page_table);
       memset(page_table, 0, 4096);
-      pde.set_page_table_base((u32)page_table);
+      pde.set_page_table_base(reinterpret_cast<u32>(page_table));
     }
 
     pde.set_user_allowed(true);
@@ -97,7 +96,8 @@ void MemoryManager::protect_map(LinearAddress addr, size_t length) {
   }
 }
 
-void MemoryManager::identity_map(LinearAddress addr, size_t length) {
+void MemoryManager::identity_map(const LinearAddress addr,
+                                 const size_t length) {
   InterruptDisabler disabler;
   for (u32 offset = 0; offset < length; offset += 4096) {
     auto pte_addr = addr.offset(offset);
@@ -176,7 +176,7 @@ u8 *MemoryManager::quick_map_one_page(PhysicalAddress addr) {
   pte.set_present(true);
   pte.set_writable(true);
   flush_tlb(LinearAddress(4 * MB));
-  return (u8 *)(4 * MB);
+  return reinterpret_cast<u8 *>(4 * MB);
 }
 
 void MemoryManager::flush_entire_tlb() {
@@ -185,14 +185,14 @@ void MemoryManager::flush_entire_tlb() {
 }
 
 void MemoryManager::flush_tlb(LinearAddress addr) {
-  asm volatile("invlpg %0" : : "m"(*(char *)addr.get()));
+  asm volatile("invlpg %0" : : "m"(*reinterpret_cast<char *>(addr.get())));
 }
 
 bool MemoryManager::unmap_region(Process &process, Process::Region &region) {
   InterruptDisabler disabler;
   auto &zone = *region.zone;
   for (size_t i = 0; i < zone.m_pages.size(); i++) {
-    auto laddr = region.addr.offset(i * PAGE_SIZE);
+    const auto laddr = region.addr.offset(i * PAGE_SIZE);
     auto pte = ensure_pte(laddr);
     pte.set_physical_page_base(0);
     pte.set_present(false);
@@ -210,10 +210,10 @@ bool MemoryManager::unmap_subregion(Process &process,
   InterruptDisabler disabler;
   auto &region = *subregion.region;
   auto &zone = *region.zone;
-  size_t numPages = subregion.size / 4096;
+  const size_t numPages = subregion.size / 4096;
   ASSERT(numPages);
   for (size_t i = 0; i < numPages; ++i) {
-    auto laddr = subregion.addr.offset(i * PAGE_SIZE);
+    const auto laddr = subregion.addr.offset(i * PAGE_SIZE);
     auto pte = ensure_pte(laddr);
     pte.set_physical_page_base(0);
     pte.set_present(false);
@@ -240,16 +240,16 @@ bool MemoryManager::unmap_regions_for_process(Process &process) {
   return true;
 }
 
-bool MemoryManager::map_subregion(Process &process,
+bool MemoryManager::map_subregion(const Process &process,
                                   Process::Subregion &subregion) {
   InterruptDisabler disabler;
   auto &region = *subregion.region;
   auto &zone = *region.zone;
-  size_t firstPage = subregion.offset / 4096;
-  size_t numPages = subregion.size / 4096;
+  const size_t firstPage = subregion.offset / 4096;
+  const size_t numPages = subregion.size / 4096;
   ASSERT(numPages);
   for (size_t i = 0; i < numPages; ++i) {
-    auto laddr = subregion.addr.offset(i * PAGE_SIZE);
+    const auto laddr = subregion.addr.offset(i * PAGE_SIZE);
     auto pte = ensure_pte(laddr);
     pte.set_physical_page_base(zone.m_pages.at(firstPage + i).get());
     pte.set_present(true);
@@ -263,11 +263,11 @@ bool MemoryManager::map_subregion(Process &process,
   return true;
 }
 
-bool MemoryManager::map_region(Process &process, Process::Region &region) {
+bool MemoryManager::map_region(const Process &process, Process::Region &region) {
   InterruptDisabler disabler;
   auto &zone = *region.zone;
   for (size_t i = 0; i < zone.m_pages.size(); ++i) {
-    auto laddr = region.addr.offset(i * PAGE_SIZE);
+    const auto laddr = region.addr.offset(i * PAGE_SIZE);
     auto pte = ensure_pte(laddr);
     pte.set_physical_page_base(zone.m_pages.at(i).get());
     pte.set_present(true);
@@ -294,7 +294,7 @@ bool MemoryManager::map_regions_for_process(Process &process) {
   return true;
 }
 
-bool copy_to_zone(Zone &zone, const void *data, size_t size) {
+bool copy_to_zone(const Zone &zone, const void *data, size_t size) {
   if (zone.size() < size) {
     kprintf(
         "[MM] copy_to_zone: can't fit {:u} bytes into zone with size {:u}\n",
@@ -303,10 +303,10 @@ bool copy_to_zone(Zone &zone, const void *data, size_t size) {
   }
 
   InterruptDisabler disabler;
-  auto *dataptr = (const u8 *)data;
+  auto *dataptr = static_cast<const u8 *>(data);
   size_t remaining = size;
-  for (size_t i = 0; i < zone.pages().size(); ++i) {
-    u8 *dest = MM.quick_map_one_page(zone.pages().at(i));
+  for (const auto i : zone.pages()) {
+    u8 *dest = MM.quick_map_one_page(i);
     kprintf("memcpy(%p, %p, %u)\n", dest, dataptr, min(PAGE_SIZE, remaining));
     memcpy(dest, dataptr, min(PAGE_SIZE, remaining));
     dataptr += PAGE_SIZE;

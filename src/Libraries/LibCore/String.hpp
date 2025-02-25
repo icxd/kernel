@@ -76,6 +76,7 @@ namespace Core {
                               FormatterFloatingRepresentation::None);
 
     StringBuilder &append(void *ptr);
+    StringBuilder &append(bool value);
 
     [[nodiscard]] String build() const { return {m_string, m_size}; }
 

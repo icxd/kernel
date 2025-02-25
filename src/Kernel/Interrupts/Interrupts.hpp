@@ -64,6 +64,7 @@ namespace GDT {
   void init();
   u16 allocate_entry();
   Descriptor &get_entry(u16 selector);
+  void increment_gdt_length();
 
 } // namespace GDT
 
@@ -77,7 +78,7 @@ namespace IDT {
 
 } // namespace IDT
 
-void load_process_register(u16 selector);
+void load_task_register(u16 selector);
 
 #define LSW(x) ((u16)((u32)(x) & 0xffff))
 #define MSW(x) ((u16)((u32)(x) >> 16) & 0xffff)

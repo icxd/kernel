@@ -46,16 +46,16 @@ public:
 
   u8 *quick_map_one_page(PhysicalAddress);
 
-  PageFaultResponse handle_page_fault(const PageFault &);
+  static PageFaultResponse handle_page_fault(const PageFault &);
 
   Core::RetainPtr<Zone> create_zone(size_t);
 
-  bool map_subregion(Process &, Process::Subregion &);
+  bool map_subregion(const Process &, Process::Subregion &);
   bool unmap_subregion(Process &, Process::Subregion &);
   bool map_subregions_for_process(Process &);
   bool unmap_subregions_for_process(Process &);
 
-  bool map_region(Process &, Process::Region &);
+  bool map_region(const Process &, Process::Region &);
   bool unmap_region(Process &, Process::Region &);
   bool map_regions_for_process(Process &);
   bool unmap_regions_for_process(Process &);
@@ -68,8 +68,8 @@ private:
   ~MemoryManager();
 
   void initialize_paging();
-  void flush_entire_tlb();
-  void flush_tlb(LinearAddress);
+  static void flush_entire_tlb();
+  static void flush_tlb(LinearAddress);
 
   void *allocate_page_table();
 
@@ -81,16 +81,16 @@ private:
   struct PageDirectoryEntry {
     explicit PageDirectoryEntry(u32 *pde) : m_pde(pde) {};
 
-    u32 *page_table_base() {
+    u32 *page_table_base() const {
       return reinterpret_cast<u32 *>(raw() & 0xfffff000u);
     }
-    void set_page_table_base(u32 value) {
+    void set_page_table_base(const u32 value) const {
       *m_pde &= 0xfff;
       *m_pde |= value & 0xfffff000;
     }
 
     u32 raw() const { return *m_pde; }
-    u32 *ptr() { return m_pde; }
+    u32 *ptr() const { return m_pde; }
 
     enum Flags {
       PRESENT = 1 << 0,
@@ -99,15 +99,15 @@ private:
     };
 
     bool is_present() const { return raw() & PRESENT; }
-    void set_present(bool b) { set_bit(PRESENT, b); }
+    void set_present(const bool b) const { set_bit(PRESENT, b); }
 
     bool is_user_allowed() const { return raw() & USER_SUPERVISOR; }
-    void set_user_allowed(bool b) { set_bit(USER_SUPERVISOR, b); }
+    void set_user_allowed(const bool b) const { set_bit(USER_SUPERVISOR, b); }
 
     bool is_writable() const { return raw() & READ_WRITE; }
-    void set_writable(bool b) { set_bit(READ_WRITE, b); }
+    void set_writable(const bool b) const { set_bit(READ_WRITE, b); }
 
-    void set_bit(u8 bit, bool value) {
+    void set_bit(const u8 bit, const bool value) const {
       if (value)
         *m_pde |= bit;
       else
@@ -120,16 +120,16 @@ private:
   struct PageTableEntry {
     explicit PageTableEntry(u32 *pte) : m_pte(pte) {}
 
-    u32 *physical_page_base() {
+    u32 *physical_page_base() const {
       return reinterpret_cast<u32 *>(raw() & 0xfffff000u);
     }
-    void set_physical_page_base(u32 value) {
+    void set_physical_page_base(u32 const value) const {
       *m_pte &= 0xfffu;
       *m_pte |= value & 0xfffff000u;
     }
 
     u32 raw() const { return *m_pte; }
-    u32 *ptr() { return m_pte; }
+    u32 *ptr() const { return m_pte; }
 
     enum Flags {
       PRESENT = 1 << 0,
@@ -138,15 +138,15 @@ private:
     };
 
     bool is_present() const { return raw() & PRESENT; }
-    void set_present(bool b) { set_bit(PRESENT, b); }
+    void set_present(const bool b) const { set_bit(PRESENT, b); }
 
     bool is_user_allowed() const { return raw() & USER_SUPERVISOR; }
-    void set_user_allowed(bool b) { set_bit(USER_SUPERVISOR, b); }
+    void set_user_allowed(const bool b) const { set_bit(USER_SUPERVISOR, b); }
 
     bool is_writable() const { return raw() & READ_WRITE; }
-    void set_writable(bool b) { set_bit(READ_WRITE, b); }
+    void set_writable(const bool b) const { set_bit(READ_WRITE, b); }
 
-    void set_bit(u8 bit, bool value) {
+    void set_bit(const u8 bit, const bool value) const {
       if (value)
         *m_pte |= bit;
       else

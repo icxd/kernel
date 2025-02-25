@@ -3,6 +3,7 @@
 #include "Interrupts/Interrupts.hpp"
 #include "PIC.hpp"
 #include "Process.hpp"
+#include "kprintf.hpp"
 
 #define IRQ_TIMER 0
 
@@ -11,7 +12,7 @@ extern "C" void clock_handle();
 
 extern volatile u32 state_dump;
 
-asm(".globl tick_ISR \n"
+asm(".globl tick_isr \n"
     ".globl state_dump \n"
     "state_dump: \n"
     ".long 0\n"
@@ -60,6 +61,7 @@ asm(".globl tick_ISR \n"
 
 void clock_handle() {
   IRQHandlerScope scope(IRQ_TIMER);
+  debugln("enter clock_handle()");
 
   if (!s_current)
     return;
@@ -93,30 +95,34 @@ void clock_handle() {
     debugln("code: {}:{:x}", s_current->tss().cs, s_current->tss().eip);
     debugln(" stk: {}:{:x}", s_current->tss().ss, s_current->tss().esp);
     debugln("astk: {}:{:x}", regs.ss_if_cross_ring, regs.esp_if_cross_ring);
+
     s_current->tss().ss = regs.ss_if_cross_ring;
     s_current->tss().esp = regs.esp_if_cross_ring;
   }
 
+  bool result = schedule_new_process();
+  DBG(result);
+
   // Prepare a new task to run;
-  if (!schedule_new_process())
+  if (!result)
     return;
   Process::prep_for_iret_to_new_process();
+  debugln("after prep_for_ret_to_new_process call");
 
   // Set the NT (nested task) flag.
   asm("pushf\n"
       "orl $0x00004000, (%esp)\n"
       "popf\n");
+  debugln("end of clock_handle");
 }
 
 namespace PIT {
 
   void initialize() {
-    u32 timer_reload;
 
     IO::write8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 
-    timer_reload = (BASE_FREQUENCY / TICKS_PER_SECOND);
-
+    u32 timer_reload = (BASE_FREQUENCY / TICKS_PER_SECOND);
     okln("PIT(i8253): {} Hz, square wave ({:x})", TICKS_PER_SECOND,
          timer_reload);
 
