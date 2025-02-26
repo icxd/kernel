@@ -6,6 +6,7 @@
 #include "../MemoryManager.hpp"
 #include "../PIC.hpp"
 #include "../kprintf.hpp"
+#include "IrqHandler.hpp"
 #include <LibCore/Array.hpp>
 #include <LibCore/Defines.hpp>
 #include <LibCore/Types.hpp>
@@ -17,24 +18,11 @@ struct PACKED DescriptorTablePointer {
 
 static DescriptorTablePointer s_idtr;
 static DescriptorTablePointer s_gdtr;
-static Descriptor s_idt[256];
-static Descriptor s_gdt[256];
-
-static IRQHandler *s_irq_handlers[16];
-
-static Array<u16, 256> *s_gdt_freelist;
+static Descriptor *s_idt;
+static Descriptor *s_gdt;
 static u16 s_gdt_length;
 
-u16 gdt_alloc_entry() {
-  ASSERT(s_gdt_freelist);
-  ASSERT(!s_gdt_freelist->is_empty());
-  return s_gdt_freelist->pop();
-}
-
-void gdt_free_entry(u16 entry) {
-  ASSERT(s_gdt_freelist);
-  s_gdt_freelist->push(entry);
-}
+static IRQHandler **s_irq_handlers;
 
 extern "C" void handle_irq();
 extern "C" void asm_irq_entry();
@@ -248,12 +236,12 @@ EH(16, "Coprocessor error");
 namespace GDT {
 
   static void write_raw_entry(u16 selector, u32 low, u32 high) {
-    u16 i = (selector & 0xfff8) >> 3;
+    u16 i = (selector & 0xfffc) >> 3;
     s_gdt[i].low = low;
     s_gdt[i].high = high;
 
     if (i > s_gdt_length)
-      s_gdtr.limit = (s_gdt_length + 1) * 8 - 1;
+      s_gdtr.limit = (s_gdt_length + 1) * 8;
   }
 
   void write_entry(u16 selector, Descriptor &descriptor) {
@@ -263,15 +251,13 @@ namespace GDT {
   void flush() {
     s_gdtr.address = s_gdt;
     s_gdtr.limit = s_gdt_length * 8 - 1;
-    asm("lgdt %0" ::"m"(s_gdtr) : "memory");
+    asm("lgdt %0" ::"m"(s_gdtr));
   }
 
   void init() {
-    s_gdt_freelist = new Array<u16, 256>();
-    for (usz i = s_gdt_length; i < 256; i++)
-      s_gdt_freelist->set(i, i * 8);
-
+    s_gdt = static_cast<Descriptor *>(kmalloc(sizeof(Descriptor) * 256));
     s_gdt_length = 5;
+
     s_gdtr.address = s_gdt;
     s_gdtr.limit = s_gdt_length * 8 - 1;
 
@@ -283,14 +269,14 @@ namespace GDT {
 
     flush();
 
-    asm volatile("mov %%ax, %%ds\n"
-                 "mov %%ax, %%es\n"
-                 "mov %%ax, %%fs\n"
-                 "mov %%ax, %%gs\n"
-                 "mov %%ax, %%ss\n" ::"a"(0x10)
-                 : "memory");
-    asm volatile("ljmpl $0x08, $sanity\n"
-                 "sanity:\n");
+    // asm volatile("mov %%ax, %%ds\n"
+    //              "mov %%ax, %%es\n"
+    //              "mov %%ax, %%fs\n"
+    //              "mov %%ax, %%gs\n"
+    //              "mov %%ax, %%ss\n" ::"a"(0x10)
+    //              : "memory");
+    // asm volatile("ljmpl $0x08, $sanity\n"
+    //              "sanity:\n");
   }
 
   u16 allocate_entry() {
@@ -332,6 +318,8 @@ namespace IDT {
   }
 
   void init() {
+    s_idt = static_cast<Descriptor *>(kmalloc(sizeof(Descriptor) * 256));
+
     s_idtr.address = s_idt;
     s_idtr.limit = 0x100 * 8 - 1;
 
@@ -356,8 +344,10 @@ namespace IDT {
     register_interrupt_handler(0x0f, _exception15);
     register_interrupt_handler(0x10, _exception16);
 
-    for (auto &s_irq_handler : s_irq_handlers)
-      s_irq_handler = nullptr;
+    s_irq_handlers =
+        static_cast<IRQHandler **>(kmalloc(sizeof(IRQHandler) * 16));
+    for (u8 i = 0; i < 16; i++)
+      s_irq_handlers[i] = nullptr;
 
     flush();
   }
