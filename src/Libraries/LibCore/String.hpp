@@ -18,6 +18,10 @@ namespace Core {
     String(const char *string, const usz size)
         : m_string(string), m_size(size) {}
 
+    bool operator==(const String &other) const {
+      return strncmp(m_string, other.m_string, m_size);
+    }
+
     [[nodiscard]] String substring(usz start, usz end) const;
     [[nodiscard]] String substring(const usz start) const {
       return substring(start, size());

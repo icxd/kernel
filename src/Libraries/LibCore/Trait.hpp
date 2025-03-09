@@ -195,4 +195,98 @@ namespace Core {
                               0))::value) ||
                              (IsVoid<From>::value && IsVoid<To>::value)> {};
 
+  template <bool B, class T = void>
+  struct EnableIf {};
+
+  template <class T>
+  struct EnableIf<true, T> {};
+
+  template <class T>
+  struct __IsPointerHelper : FalseType {};
+  template <class T>
+  struct __IsPointerHelper<T *> : TrueType {};
+
+  template <class T>
+  struct IsPointer : __IsPointerHelper<typename RemoveCV<T>::Type> {};
+
+  template <class>
+  struct IsFunction : FalseType {};
+
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...)> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......)> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) const> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) const> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) volatile> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) volatile> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) const volatile> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) const volatile> : TrueType {};
+
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) const &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) const &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) volatile &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) volatile &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) const volatile &> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) const volatile &> : TrueType {};
+
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) const &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) const &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) volatile &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) volatile &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args...) const volatile &&> : TrueType {};
+  template <class Ret, class... Args>
+  struct IsFunction<Ret(Args......) const volatile &&> : TrueType {};
+
+  template <class T>
+  struct IsRvalueReference : FalseType {};
+  template <class T>
+  struct IsRvalueReference<T &&> : TrueType {};
+
+  template <class T>
+  struct RemovePointer {
+    typedef T Type;
+  };
+  template <class T>
+  struct RemovePointer<T *> {
+    typedef T Type;
+  };
+  template <class T>
+  struct RemovePointer<T *const> {
+    typedef T Type;
+  };
+  template <class T>
+  struct RemovePointer<T *volatile> {
+    typedef T Type;
+  };
+  template <class T>
+  struct RemovePointer<T *const volatile> {
+    typedef T Type;
+  };
+
 } // namespace Core
