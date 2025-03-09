@@ -12,6 +12,7 @@ add_sources(
   FormatTypes.hpp
   Function.hpp
   Hashable.hpp
+  HashMap.hpp
   HashTable.hpp
   OwnPtr.hpp
   Parser.hpp
